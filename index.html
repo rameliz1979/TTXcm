@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Criptografia Moderna: analisis de evidencias</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg: #002b36;
+      --panel: #003b4a;
+      --panel-2: #006680;
+      --line: #889fa3;
+      --text: #f7fbfc;
+      --muted: #b6c9cc;
+      --tech: #006680;
+      --mint: #f2b20d;
+      --warn: #ff5900;
+      --orange: #ff5900;
+      --gray: #889fa3;
+      --font-institutional: "Franklin Gothic Medium", "Franklin Gothic Demi", "Arial Narrow", Arial, sans-serif;
+      --fs-page-title: 1.18rem;
+      --fs-eyebrow: .76rem;
+      --fs-kicker: .68rem;
+      --fs-slide-title: 1.72rem;
+      --fs-subtitle: .82rem;
+      --fs-card-title: .86rem;
+      --fs-body: .72rem;
+      --fs-tag: .64rem;
+      --fs-code: .68rem;
+      --fs-quote: .95rem;
+      --viewport-h: 100vh;
+      --available-h: max(420px, calc(var(--viewport-h) - 112px));
+      --slide-w: min(98vw, 1800px, calc(var(--available-h) * 16 / 9));
+      --slide-h: calc(var(--slide-w) * 9 / 16);
+    }
+
+    @supports (height: 100dvh) {
+      :root { --viewport-h: 100dvh; }
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(242, 178, 13, .14), transparent 32rem),
+        linear-gradient(135deg, #002b36 0%, #003b4a 48%, #001f27 100%);
+      font-family: var(--font-institutional);
+    }
+
+    .app {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 8px;
+      padding: clamp(6px, 1vw, 12px);
+    }
+
+    header {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      min-width: 0;
+      gap: 12px;
+    }
+
+    header > div:first-child { min-width: 0; }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: var(--fs-eyebrow);
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 1100px;
+      color: white;
+      font-size: var(--fs-page-title);
+      line-height: 1.12;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+      text-wrap: balance;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .top-actions button,
+    .nav-btn,
+    .jump label {
+      border: 1px solid rgba(0, 102, 128, .35);
+      border-radius: 8px;
+      background: rgba(0, 102, 128, .12);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 900;
+      transition: background .15s ease, transform .15s ease;
+    }
+
+    .top-actions button {
+      width: 44px;
+      height: 44px;
+      font-size: 20px;
+    }
+
+    .top-actions button:hover,
+    .nav-btn:hover,
+    .jump label:hover {
+      background: rgba(0, 102, 128, .22);
+      transform: translateY(-1px);
+    }
+
+    input[name="deck"] {
+      position: fixed;
+      left: -9999px;
+    }
+
+    .stage {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+    }
+
+    .deck {
+      position: relative;
+      width: var(--slide-w);
+      height: var(--slide-h);
+      max-width: 1800px;
+      max-height: var(--available-h);
+      min-width: 320px;
+      min-height: 180px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 102, 128, .36);
+      border-radius: 10px;
+      background:
+        linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .03) 1px, transparent 1px),
+        linear-gradient(145deg, rgba(0, 80, 100, .98), rgba(0, 43, 54, .99) 58%, rgba(0, 59, 74, .98));
+      background-size: 82px 82px, 82px 82px, auto;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .32);
+    }
+
+    .slide {
+      display: none;
+      height: 100%;
+      padding: clamp(12px, 1.35vw, 22px);
+      flex-direction: column;
+      gap: 9px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #s1:checked ~ .stage .slide-1,
+    #s2:checked ~ .stage .slide-2,
+    #s3:checked ~ .stage .slide-3,
+    #s4:checked ~ .stage .slide-4,
+    #s5:checked ~ .stage .slide-5,
+    #s6:checked ~ .stage .slide-6,
+    #s7:checked ~ .stage .slide-7,
+    #s8:checked ~ .stage .slide-8,
+    #s9:checked ~ .stage .slide-9,
+    #s10:checked ~ .stage .slide-10,
+    #s11:checked ~ .stage .slide-11,
+    #s12:checked ~ .stage .slide-12,
+    #s13:checked ~ .stage .slide-13,
+    #s14:checked ~ .stage .slide-14,
+    #s15:checked ~ .stage .slide-15,
+    #s16:checked ~ .stage .slide-16,
+    #s17:checked ~ .stage .slide-17,
+    #s18:checked ~ .stage .slide-18 {
+      display: flex;
+    }
+
+    .slide-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+      min-width: 0;
+      flex: 0 0 auto;
+    }
+
+    .slide-head > div:first-child { min-width: 0; }
+
+    .kicker {
+      margin: 0 0 5px;
+      color: var(--mint);
+      font-size: var(--fs-kicker);
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin: 0;
+      max-width: 980px;
+      color: white;
+      font-size: var(--fs-slide-title);
+      line-height: 1.08;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+      text-wrap: balance;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      max-width: 980px;
+      color: rgba(238, 248, 255, .82);
+      font-size: var(--fs-subtitle);
+      line-height: 1.28;
+      overflow-wrap: anywhere;
+      text-wrap: pretty;
+    }
+
+    .icon-box {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      border: 1px solid rgba(242, 178, 13, .34);
+      border-radius: 8px;
+      color: var(--mint);
+      background: rgba(242, 178, 13, .1);
+      font-size: 21px;
+      font-weight: 900;
+    }
+
+    .content {
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+      display: grid;
+      gap: 8px;
+      align-content: stretch;
+      overflow: hidden;
+      padding-right: 0;
+    }
+
+    .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .two-wide { grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); }
+    .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+    .card {
+      min-width: 0;
+      border: 1px solid rgba(136, 159, 163, .22);
+      border-radius: 8px;
+      background: rgba(0, 59, 74, .76);
+      padding: clamp(8px, .85vw, 13px);
+      overflow-wrap: anywhere;
+      max-width: 100%;
+      min-height: 0;
+    }
+
+    .content > .card {
+      overflow: hidden;
+    }
+
+    .card.accent {
+      border-color: rgba(242, 178, 13, .35);
+      background: linear-gradient(145deg, rgba(242, 178, 13, .12), rgba(0, 59, 74, .78));
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      color: white;
+      font-size: var(--fs-card-title);
+      line-height: 1.16;
+      text-wrap: balance;
+    }
+
+    .card p,
+    .card li,
+    td,
+    th {
+      color: rgba(238, 248, 255, .84);
+      font-size: var(--fs-body);
+      line-height: 1.22;
+    }
+
+    ul, ol {
+      margin: 0;
+      padding-left: 1.05rem;
+    }
+
+    li + li { margin-top: 3px; }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border: 1px solid rgba(242, 178, 13, .34);
+      border-radius: 8px;
+      background: rgba(242, 178, 13, .1);
+      color: var(--mint);
+      padding: 4px 8px;
+      font-size: var(--fs-tag);
+      font-weight: 900;
+      overflow-wrap: anywhere;
+      text-align: center;
+    }
+
+    .arrow {
+      color: var(--tech);
+      font-weight: 900;
+    }
+
+    table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid rgba(136, 159, 163, .22);
+      border-radius: 8px;
+      background: rgba(0, 43, 54, .58);
+    }
+
+    th, td {
+      padding: 6px;
+      border: 1px solid rgba(136, 159, 163, .16);
+      vertical-align: top;
+      overflow-wrap: anywhere;
+    }
+
+    th {
+      color: white;
+      background: rgba(0, 102, 128, .16);
+      font-weight: 900;
+      text-align: left;
+    }
+
+    code {
+      display: block;
+      border: 1px solid rgba(136, 159, 163, .22);
+      border-radius: 8px;
+      background: rgba(0, 31, 39, .72);
+      color: var(--text);
+      padding: 10px;
+      font-size: var(--fs-code);
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .quote {
+      display: grid;
+      place-items: center;
+      min-height: 130px;
+      border: 1px solid rgba(242, 178, 13, .35);
+      border-radius: 8px;
+      background: rgba(242, 178, 13, .1);
+      padding: 16px;
+      color: white;
+      font-size: var(--fs-quote);
+      font-weight: 900;
+      line-height: 1.18;
+      text-align: center;
+      overflow-wrap: anywhere;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .slide-nav {
+      position: fixed;
+      right: clamp(16px, 3vw, 46px);
+      bottom: clamp(14px, 2.2vh, 26px);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      z-index: 30;
+      border: 1px solid rgba(0, 102, 128, .35);
+      border-radius: 10px;
+      background: rgba(0, 43, 54, .84);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, .28);
+      padding: 8px;
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-btn {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      font-size: 22px;
+      user-select: none;
+    }
+
+    .slide-num {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      min-width: 58px;
+      text-align: center;
+    }
+
+    footer {
+      width: min(98vw, 1800px);
+      margin: 0 auto;
+      display: grid;
+      gap: 6px;
+    }
+
+    .jump {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding-right: 260px;
+    }
+
+    .jump label {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+    }
+
+    #s1:checked ~ footer label[for="s1"],
+    #s2:checked ~ footer label[for="s2"],
+    #s3:checked ~ footer label[for="s3"],
+    #s4:checked ~ footer label[for="s4"],
+    #s5:checked ~ footer label[for="s5"],
+    #s6:checked ~ footer label[for="s6"],
+    #s7:checked ~ footer label[for="s7"],
+    #s8:checked ~ footer label[for="s8"],
+    #s9:checked ~ footer label[for="s9"],
+    #s10:checked ~ footer label[for="s10"],
+    #s11:checked ~ footer label[for="s11"],
+    #s12:checked ~ footer label[for="s12"],
+    #s13:checked ~ footer label[for="s13"],
+    #s14:checked ~ footer label[for="s14"],
+    #s15:checked ~ footer label[for="s15"],
+    #s16:checked ~ footer label[for="s16"],
+    #s17:checked ~ footer label[for="s17"],
+    #s18:checked ~ footer label[for="s18"] {
+      background: var(--mint);
+      border-color: var(--mint);
+      color: #002b36;
+    }
+
+    .help {
+      margin: 0;
+      color: rgba(238, 248, 255, .66);
+      font-size: 12px;
+      text-align: center;
+      display: none;
+    }
+
+    .print-only { display: none; }
+
+    @media (max-width: 1100px) {
+      .four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .five { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 900px) {
+      :root {
+        --available-h: max(560px, calc(var(--viewport-h) - 118px));
+        --fs-page-title: 1.02rem;
+        --fs-eyebrow: .68rem;
+        --fs-slide-title: 1.28rem;
+        --fs-subtitle: .74rem;
+        --fs-card-title: .8rem;
+        --fs-body: .66rem;
+        --fs-tag: .58rem;
+        --fs-code: .62rem;
+        --fs-quote: .82rem;
+      }
+      .app { padding: 8px; }
+      header { align-items: stretch; gap: 8px; }
+      .top-actions button { width: 42px; height: 42px; font-size: 19px; }
+      .slide-nav {
+        right: 14px;
+        bottom: 12px;
+        padding: 7px;
+      }
+      .nav-btn { width: 38px; height: 38px; }
+      .jump {
+        justify-content: flex-start;
+        padding-right: 190px;
+      }
+      .slide {
+        overflow: hidden;
+        padding: 20px 20px 64px;
+        gap: 10px;
+      }
+      .two, .two-wide, .three, .four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .five { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .deck {
+        width: 98vw;
+        height: min(82vh, var(--available-h));
+        height: min(82dvh, var(--available-h));
+        max-height: none;
+      }
+      table {
+        display: table;
+        overflow: hidden;
+        table-layout: fixed;
+      }
+    }
+
+    @media (max-width: 620px) {
+      :root {
+        --available-h: max(520px, calc(var(--viewport-h) - 108px));
+        --fs-page-title: .94rem;
+        --fs-slide-title: 1.02rem;
+        --fs-subtitle: .64rem;
+        --fs-card-title: .72rem;
+        --fs-body: .58rem;
+        --fs-tag: .54rem;
+        --fs-code: .56rem;
+        --fs-quote: .72rem;
+      }
+      header { display: grid; }
+      .top-actions { justify-content: start; }
+      .slide-nav {
+        right: 10px;
+        bottom: 10px;
+        gap: 6px;
+        padding: 6px;
+      }
+      .nav-btn { width: 34px; height: 34px; font-size: 18px; }
+      .slide-num { min-width: 46px; font-size: 12px; }
+      .jump { padding-right: 150px; }
+      .two, .two-wide, .three, .four, .five { grid-template-columns: 1fr; }
+      .deck {
+        width: 98vw;
+        height: min(82vh, var(--available-h));
+        height: min(82dvh, var(--available-h));
+      }
+      .slide {
+        padding: 18px 16px 70px;
+        gap: 9px;
+      }
+      .quote { min-height: 100px; padding: 12px; }
+      .jump label { width: 28px; height: 28px; }
+      .icon-box { display: none; }
+    }
+
+    @media (max-height: 720px) and (min-width: 621px) {
+      :root {
+        --available-h: max(420px, calc(var(--viewport-h) - 78px));
+        --fs-page-title: 1rem;
+        --fs-slide-title: 1.24rem;
+        --fs-subtitle: .7rem;
+        --fs-card-title: .78rem;
+        --fs-body: .62rem;
+        --fs-tag: .56rem;
+        --fs-quote: .78rem;
+      }
+      .app { gap: 5px; padding-block: 6px; }
+      .eyebrow { display: none; }
+      .top-actions button { width: 38px; height: 38px; font-size: 18px; }
+      footer { gap: 6px; }
+      .help { display: none; }
+    }
+
+    @media print {
+      body { background: white; color: #002b36; }
+      header, footer, input[name="deck"], .slide-nav, .top-actions { display: none !important; }
+      .app { display: block; padding: 0; }
+      .stage { display: block; }
+      .deck {
+        width: auto;
+        height: auto;
+        border: 0;
+        box-shadow: none;
+        background: white;
+      }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        min-height: 100vh;
+        color: #002b36;
+        background: white;
+      }
+      h2, .card h3 { color: #002b36; }
+      .subtitle, .card p, .card li, td, th { color: #003b4a; }
+      .card, .quote, code { background: white; color: #002b36; border-color: #b6c9cc; }
+      .content,
+      .content > .card { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <p class="eyebrow">Maestria en Ciberseguridad</p>
+        <h1>Criptografia Moderna: evidencias y proteccion de informacion comprometida</h1>
+      </div>
+      <div class="top-actions" aria-label="Acciones">
+        <button type="button" onclick="window.print()" title="Imprimir o guardar PDF">P</button>
+        <button type="button" id="fullToggle" title="Pantalla completa">+</button>
+      </div>
+    </header>
+
+    <input id="s1" type="radio" name="deck" checked>
+    <input id="s2" type="radio" name="deck">
+    <input id="s3" type="radio" name="deck">
+    <input id="s4" type="radio" name="deck">
+    <input id="s5" type="radio" name="deck">
+    <input id="s6" type="radio" name="deck">
+    <input id="s7" type="radio" name="deck">
+    <input id="s8" type="radio" name="deck">
+    <input id="s9" type="radio" name="deck">
+    <input id="s10" type="radio" name="deck">
+    <input id="s11" type="radio" name="deck">
+    <input id="s12" type="radio" name="deck">
+    <input id="s13" type="radio" name="deck">
+    <input id="s14" type="radio" name="deck">
+    <input id="s15" type="radio" name="deck">
+    <input id="s16" type="radio" name="deck">
+    <input id="s17" type="radio" name="deck">
+    <input id="s18" type="radio" name="deck">
+
+    <section class="stage">
+      <article class="deck" aria-label="Presentacion">
+        <section class="slide slide-1">
+          <div class="content two-wide" style="align-items:center;">
+            <div>
+              <p class="kicker">Presentacion academica</p>
+              <h2>Criptografia Moderna: analisis de evidencias y proteccion de la informacion comprometida</h2>
+              <p class="subtitle">Orientaciones para el desarrollo y registro de las evidencias criptograficas.</p>
+              <div class="tag-row" style="margin-top:22px;">
+                <span class="tag">evidencia</span>
+                <span class="tag">cifrado</span>
+                <span class="tag">integridad</span>
+                <span class="tag">claves</span>
+                <span class="tag">trazabilidad</span>
+              </div>
+            </div>
+            <div class="card accent" style="min-height:300px; display:grid; place-items:center;">
+              <div style="text-align:center;">
+                <div style="font-size:86px; font-weight:900; color:var(--mint);">#</div>
+                <h3>Proteccion criptografica</h3>
+                <p>Hashes, cifrado, datos sensibles y gestion segura de claves.</p>
+              </div>
+            </div>
+          </div>
+          <nav class="slide-nav"><span class="slide-num">1 / 18</span><label class="nav-btn" for="s2">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-2">
+          <div class="slide-head"><div><p class="kicker">Criptografia Moderna</p><h2>Proposito del analisis criptografico</h2><p class="subtitle">Evaluar si los mecanismos de proteccion criptografica resguardan la informacion comprometida.</p></div><div class="icon-box">T</div></div>
+          <div class="content two">
+            <div class="card"><h3>Proposito principal</h3><ul><li>Determinar si la informacion sensible se encuentra protegida.</li><li>Identificar debilidades de cifrado.</li><li>Evaluar la integridad de archivos y registros.</li><li>Revisar la administracion de claves.</li><li>Proponer controles coherentes con las evidencias.</li></ul></div>
+            <div class="card accent"><h3>Esquema de razonamiento</h3><div class="tag-row"><span class="tag">Evidencia tecnica</span><span class="arrow">&gt;</span><span class="tag">Debilidad criptografica</span><span class="arrow">&gt;</span><span class="tag">Riesgo</span><span class="arrow">&gt;</span><span class="tag">Control propuesto</span></div></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s1">&lt;</label><span class="slide-num">2 / 18</span><label class="nav-btn" for="s3">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-3">
+          <div class="slide-head"><div><p class="kicker">Ruta de trabajo</p><h2>Que deben hacer los estudiantes</h2><p class="subtitle">Diez acciones organizadas en cinco momentos de analisis criptografico.</p></div><div class="icon-box">R</div></div>
+          <div class="content five">
+            <div class="card"><h3>1. Evidencias</h3><p>Revisar evidencias tecnicas disponibles y verificar integridad mediante SHA-256.</p></div>
+            <div class="card"><h3>2. Informacion</h3><p>Identificar informacion sensible, critica o clinica involucrada.</p></div>
+            <div class="card"><h3>3. Proteccion</h3><p>Analizar cifrado, transmision y almacenamiento seguro.</p></div>
+            <div class="card"><h3>4. Claves e integridad</h3><p>Revisar gestion de claves e integridad de archivos, registros y datos.</p></div>
+            <div class="card accent"><h3>5. Registro</h3><p>Identificar brechas, proponer controles y registrar resultados en la plantilla.</p></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s2">&lt;</label><span class="slide-num">3 / 18</span><label class="nav-btn" for="s4">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-4">
+          <div class="slide-head"><div><p class="kicker">Evidencia tecnica</p><h2>Evidencias relacionadas con Criptografia Moderna</h2><p class="subtitle">El analisis debe sustentarse en elementos verificables, no solamente en opiniones.</p></div><div class="icon-box">E</div></div>
+          <div class="content four">
+            <div class="card"><h3>Hashes e integridad</h3><ul><li>Hashes de archivos.</li><li>Verificacion SHA-256.</li><li>Archivos modificados.</li></ul></div>
+            <div class="card"><h3>Cifrado</h3><ul><li>Datos sin cifrado.</li><li>Certificados.</li><li>Protocolos seguros.</li></ul></div>
+            <div class="card"><h3>Claves</h3><ul><li>Registros de acceso.</li><li>Configuraciones sensibles.</li><li>Credenciales expuestas.</li></ul></div>
+            <div class="card accent"><h3>Soportes</h3><ul><li>Capturas legibles.</li><li>Salidas de comandos.</li><li>Resultados de herramientas.</li></ul></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s3">&lt;</label><span class="slide-num">4 / 18</span><label class="nav-btn" for="s5">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-5">
+          <div class="slide-head"><div><p class="kicker">Integridad</p><h2>Verificacion mediante SHA-256</h2><p class="subtitle">Procedimiento inicial para confirmar si el recurso tecnico recibido conserva su integridad.</p></div><div class="icon-box">#</div></div>
+          <div class="content two-wide">
+            <div class="card"><h3>Pasos</h3><ol><li>Descargar el archivo suministrado.</li><li>Obtener el hash SHA-256 calculado.</li><li>Compararlo con el hash entregado oficialmente.</li><li>Determinar si coinciden.</li><li>Registrar el resultado.</li><li>Conservar captura o salida del comando.</li></ol></div>
+            <div class="card accent"><h3>Ejemplos tecnicos</h3><code>Windows: Get-FileHash .\recurso.zip -Algorithm SHA256</code><br><code>Linux: sha256sum recurso.zip</code><p>Son ejemplos ilustrativos, no requisitos adicionales.</p></div>
+            <div class="card" style="grid-column:1 / -1;"><table><thead><tr><th>Archivo</th><th>Hash esperado</th><th>Hash calculado</th><th>Herramienta</th><th>Resultado</th><th>Conclusion</th></tr></thead><tbody><tr><td>recurso_clinico.zip</td><td>8f3a...c91b</td><td>8f3a...c91b</td><td>PowerShell</td><td>Coincide</td><td>Integridad conservada.</td></tr></tbody></table></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s4">&lt;</label><span class="slide-num">5 / 18</span><label class="nav-btn" for="s6">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-6">
+          <div class="slide-head"><div><p class="kicker">Proteccion</p><h2>Informacion que requiere proteccion</h2><p class="subtitle">Identificar los activos sensibles antes de evaluar controles criptograficos.</p></div><div class="icon-box">D</div></div>
+          <div class="content two">
+            <div class="card"><h3>Tipos de informacion</h3><ul><li>Datos clinicos.</li><li>Informacion personal sensible.</li><li>Credenciales.</li><li>Archivos de configuracion.</li><li>Bases de datos.</li><li>Copias de respaldo.</li><li>Registros de auditoria.</li><li>Informacion transmitida entre sistemas.</li></ul></div>
+            <div class="card accent"><h3>Para cada tipo se determina</h3><ul><li>Nivel de sensibilidad.</li><li>Ubicacion.</li><li>Forma de almacenamiento.</li><li>Forma de transmision.</li><li>Mecanismo de proteccion actual.</li><li>Consecuencia de exposicion o modificacion.</li></ul></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s5">&lt;</label><span class="slide-num">6 / 18</span><label class="nav-btn" for="s7">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-7">
+          <div class="slide-head"><div><p class="kicker">Cifrado</p><h2>Analisis del cifrado de la informacion</h2><p class="subtitle">Determinar si el cifrado existe, es adecuado y esta demostrado por evidencia.</p></div><div class="icon-box">L</div></div>
+          <div class="content two">
+            <div class="card"><h3>Preguntas orientadoras</h3><ul><li>Que informacion se encuentra cifrada.</li><li>Que informacion esta almacenada sin cifrado.</li><li>Si el cifrado protege datos almacenados.</li><li>Si la informacion esta protegida durante transmision.</li><li>Si existen respaldos o credenciales expuestas.</li><li>Si hay evidencia que demuestre el cifrado.</li></ul></div>
+            <div class="card accent"><h3>Matriz de analisis</h3><table><thead><tr><th>Activo</th><th>Estado</th><th>Evidencia</th><th>Debilidad</th><th>Recomendacion</th></tr></thead><tbody><tr><td>BD clinica demo</td><td>Sin cifrado</td><td>Configuracion revisada</td><td>Exposicion</td><td>Cifrado y claves seguras</td></tr></tbody></table></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s6">&lt;</label><span class="slide-num">7 / 18</span><label class="nav-btn" for="s8">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-8">
+          <div class="slide-head"><div><p class="kicker">Datos sensibles</p><h2>Proteccion de datos sensibles</h2><p class="subtitle">No basta con identificar un mecanismo de cifrado; debe evaluarse si protege correctamente la informacion.</p></div><div class="icon-box">P</div></div>
+          <div class="content two">
+            <div class="card"><h3>Aspectos a revisar</h3><ul><li>Datos sensibles identificados.</li><li>Usuarios o procesos autorizados.</li><li>Controles de acceso asociados.</li><li>Datos visibles en texto plano.</li><li>Copias temporales o respaldos sin proteccion.</li><li>Riesgo de divulgacion.</li></ul></div>
+            <div class="card accent"><h3>Ejemplo ficticio</h3><p>Una base de datos de pruebas contiene campos clinicos simulados en texto plano dentro de una copia de respaldo. La evidencia sugiere ausencia de cifrado en reposo y requiere control criptografico sobre el respaldo.</p></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s7">&lt;</label><span class="slide-num">8 / 18</span><label class="nav-btn" for="s9">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-9">
+          <div class="slide-head"><div><p class="kicker">Almacenamiento</p><h2>Almacenamiento seguro de la informacion</h2><p class="subtitle">Evaluar donde y como se guardan datos, claves, certificados y registros sensibles.</p></div><div class="icon-box">S</div></div>
+          <div class="content two">
+            <div class="card"><h3>Elementos a analizar</h3><ul><li>Bases de datos.</li><li>Archivos.</li><li>Copias de respaldo.</li><li>Registros de auditoria.</li><li>Archivos de configuracion.</li><li>Credenciales, certificados y claves.</li></ul></div>
+            <div class="card accent"><h3>Preguntas orientadoras</h3><ul><li>La informacion se almacena cifrada?</li><li>Las claves estan separadas de los datos?</li><li>Existen credenciales en texto plano?</li><li>Los respaldos tienen proteccion?</li><li>Hay evidencia de manipulacion o exposicion?</li></ul></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s8">&lt;</label><span class="slide-num">9 / 18</span><label class="nav-btn" for="s10">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-10">
+          <div class="slide-head"><div><p class="kicker">Claves</p><h2>Gestion de claves criptograficas</h2><p class="subtitle">La seguridad del cifrado depende de la adecuada administracion de las claves.</p></div><div class="icon-box">K</div></div>
+          <div class="content two-wide">
+            <div class="card"><h3>Ciclo de vida</h3><div class="tag-row"><span class="tag">Generacion</span><span class="tag">Almacenamiento</span><span class="tag">Custodia</span><span class="tag">Distribucion</span><span class="tag">Rotacion</span><span class="tag">Revocacion</span><span class="tag">Recuperacion</span><span class="tag">Eliminacion</span><span class="tag">Auditoria</span></div></div>
+            <div class="card accent"><h3>Debilidades posibles</h3><ul><li>Claves almacenadas junto con los datos.</li><li>Claves incluidas en codigo.</li><li>Uso compartido de claves.</li><li>Falta de rotacion.</li><li>Acceso sin control.</li><li>Ausencia de trazabilidad.</li></ul></div>
+            <div class="card" style="grid-column:1 / -1;"><table><thead><tr><th>Debilidad</th><th>Evidencia encontrada</th><th>Consecuencia</th><th>Control recomendado</th></tr></thead><tbody><tr><td>Clave en archivo</td><td>Configuracion visible</td><td>Acceso no autorizado</td><td>Custodia segura y rotacion</td></tr></tbody></table></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s9">&lt;</label><span class="slide-num">10 / 18</span><label class="nav-btn" for="s11">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-11">
+          <div class="slide-head"><div><p class="kicker">Integridad</p><h2>Integridad de la informacion</h2><p class="subtitle">Garantizar que los datos no hayan sido modificados sin autorizacion.</p></div><div class="icon-box">I</div></div>
+          <div class="content two">
+            <div class="card"><h3>Mecanismos relacionados</h3><ul><li>Funciones hash.</li><li>Checksums criptograficos.</li><li>Codigos de autenticacion de mensajes.</li><li>Firmas digitales, cuando sean aplicables.</li><li>Registros de auditoria protegidos.</li><li>Comparacion de archivos.</li></ul></div>
+            <div class="card accent"><h3>El estudiante determina</h3><ul><li>Que informacion pudo modificarse.</li><li>Que evidencia sugiere alteracion.</li><li>Si existe hash de referencia.</li><li>Si es posible comprobar integridad.</li><li>Que mecanismo detectaria cambios futuros.</li></ul></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s10">&lt;</label><span class="slide-num">11 / 18</span><label class="nav-btn" for="s12">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-12">
+          <div class="slide-head"><div><p class="kicker">Hallazgos</p><h2>Identificacion de debilidades criptograficas</h2><p class="subtitle">Solo deben registrarse hallazgos relacionados con evidencias observadas.</p></div><div class="icon-box">!</div></div>
+          <div class="content four">
+            <div class="card"><h3>Confidencialidad</h3><ul><li>Informacion sensible sin cifrado.</li><li>Datos transmitidos sin proteccion.</li><li>Credenciales en texto plano.</li></ul></div>
+            <div class="card"><h3>Integridad</h3><ul><li>Ausencia de validacion.</li><li>Hash de referencia ausente.</li><li>Registros alterables.</li></ul></div>
+            <div class="card"><h3>Claves</h3><ul><li>Claves debiles o expuestas.</li><li>Sin rotacion.</li><li>Falta de trazabilidad.</li></ul></div>
+            <div class="card accent"><h3>Configuracion</h3><ul><li>Algoritmos inadecuados.</li><li>Certificados vencidos.</li><li>Respaldos sin cifrado.</li></ul></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s11">&lt;</label><span class="slide-num">12 / 18</span><label class="nav-btn" for="s13">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-13">
+          <div class="slide-head"><div><p class="kicker">Propuesta</p><h2>Formulacion de la propuesta criptografica</h2><p class="subtitle">La propuesta debe responder directamente a las debilidades encontradas.</p></div><div class="icon-box">C</div></div>
+          <div class="content two">
+            <div class="card"><h3>Debe contener</h3><ul><li>Problema identificado y activo afectado.</li><li>Evidencia que demuestra el problema.</li><li>Riesgo criptografico.</li><li>Objetivo de proteccion.</li><li>Control criptografico propuesto.</li><li>Forma general de implementacion.</li><li>Responsable de claves.</li><li>Resultado esperado y evidencia de validacion.</li></ul></div>
+            <div class="card accent"><h3>Esquema</h3><div class="tag-row"><span class="tag">Hallazgo</span><span class="arrow">&gt;</span><span class="tag">Evidencia</span><span class="arrow">&gt;</span><span class="tag">Riesgo</span><span class="arrow">&gt;</span><span class="tag">Mecanismo criptografico</span><span class="arrow">&gt;</span><span class="tag">Resultado esperado</span></div><p>No se exige una solucion funcional; la propuesta debe ser sustentada y coherente.</p></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s12">&lt;</label><span class="slide-num">13 / 18</span><label class="nav-btn" for="s14">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-14">
+          <div class="slide-head"><div><p class="kicker">Hoja 6.3</p><h2>Registro en "Analisis del incidente"</h2><p class="subtitle">Documentar el analisis criptografico dentro de la plantilla oficial.</p></div><div class="icon-box">6.3</div></div>
+          <div class="content two">
+            <div class="card"><h3>Campos a diligenciar</h3><ul><li>Indicador o artefacto.</li><li>Detalle tecnico del hallazgo.</li><li>Tipo de situacion identificada.</li><li>Riesgo principal asociado.</li><li>Criticidad.</li><li>Alcance afectado.</li><li>Observaciones.</li></ul></div>
+            <div class="card accent"><h3>Ejemplo ficticio</h3><table><tbody><tr><th>Indicador</th><td>Archivo de configuracion con credencial visible.</td></tr><tr><th>Detalle</th><td>Clave almacenada en texto plano.</td></tr><tr><th>Riesgo</th><td>Acceso no autorizado a informacion sensible.</td></tr><tr><th>Criticidad</th><td>Alta.</td></tr><tr><th>Recomendacion</th><td>Retirar la clave, custodiarla de forma segura y establecer rotacion.</td></tr></tbody></table></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s13">&lt;</label><span class="slide-num">14 / 18</span><label class="nav-btn" for="s15">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-15">
+          <div class="slide-head"><div><p class="kicker">Soportes</p><h2>Evidencias que deben conservar</h2><p class="subtitle">Los soportes deben ser legibles, explicados y libres de datos personales reales.</p></div><div class="icon-box">F</div></div>
+          <div class="content four">
+            <div class="card"><h3>Integridad</h3><ul><li>Captura SHA-256.</li><li>Hash calculado.</li><li>Caracteristicas del archivo.</li></ul></div>
+            <div class="card"><h3>Cifrado</h3><ul><li>Datos sin cifrado.</li><li>Credenciales expuestas.</li><li>Configuraciones relevantes.</li></ul></div>
+            <div class="card"><h3>Validaciones</h3><ul><li>Certificados o protocolos.</li><li>Resultados de herramientas.</li><li>Capturas legibles.</li></ul></div>
+            <div class="card accent"><h3>Producto tecnico</h3><ul><li>Tabla de hallazgos.</li><li>Matriz de cifrado e integridad.</li><li>Propuesta de controles.</li><li>Conclusion tecnica.</li></ul></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s14">&lt;</label><span class="slide-num">15 / 18</span><label class="nav-btn" for="s16">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-16">
+          <div class="slide-head"><div><p class="kicker">Trazabilidad</p><h2>Trazabilidad del analisis</h2><p class="subtitle">Cada recomendacion debe estar relacionada con una evidencia concreta.</p></div><div class="icon-box">W</div></div>
+          <div class="content">
+            <div class="card accent"><table><thead><tr><th>Evidencia tecnica</th><th>Hallazgo criptografico</th><th>Riesgo</th><th>Control propuesto</th><th>Resultado esperado</th></tr></thead><tbody><tr><td>Base de datos almacenada sin cifrado.</td><td>Ausencia de proteccion criptografica en reposo.</td><td>Divulgacion de informacion sensible.</td><td>Implementar cifrado de datos y gestion segura de claves.</td><td>Reduccion del riesgo de exposicion de informacion.</td></tr></tbody></table></div>
+            <div class="tag-row" style="justify-content:center;"><span class="tag">Evidencia</span><span class="arrow">&gt;</span><span class="tag">Hallazgo</span><span class="arrow">&gt;</span><span class="tag">Riesgo</span><span class="arrow">&gt;</span><span class="tag">Control</span><span class="arrow">&gt;</span><span class="tag">Resultado</span></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s15">&lt;</label><span class="slide-num">16 / 18</span><label class="nav-btn" for="s17">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-17">
+          <div class="slide-head"><div><p class="kicker">Entrega</p><h2>Lista de verificacion antes de entregar</h2><p class="subtitle">Confirmar completitud, evidencia y coherencia tecnica.</p></div><div class="icon-box">V</div></div>
+          <div class="content three">
+            <div class="card"><ul><li>Se verifico integridad mediante SHA-256?</li><li>Se registro el resultado de comparacion?</li><li>Se identifico informacion sensible?</li><li>Se evaluo el cifrado?</li></ul></div>
+            <div class="card"><ul><li>Se reviso almacenamiento seguro?</li><li>Se analizo gestion de claves?</li><li>Se evaluo integridad de datos?</li><li>Cada hallazgo tiene evidencia tecnica?</li></ul></div>
+            <div class="card accent"><ul><li>Las recomendaciones responden a hallazgos?</li><li>Se registro la hoja 6.3?</li><li>Las capturas son legibles?</li><li>Se evito informacion personal real?</li><li>Existe trazabilidad completa?</li></ul></div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s16">&lt;</label><span class="slide-num">17 / 18</span><label class="nav-btn" for="s18">&gt;</label></nav>
+        </section>
+
+        <section class="slide slide-18">
+          <div class="slide-head"><div><p class="kicker">Cierre</p><h2>Resultado esperado del analisis de Criptografia Moderna</h2><p class="subtitle">Un diagnostico tecnico, trazable y sustentado en evidencia verificable.</p></div><div class="icon-box">OK</div></div>
+          <div class="content two">
+            <div class="card"><h3>Resultado final</h3><ul><li>Evidencias tecnicas verificables.</li><li>Diagnostico del estado de proteccion criptografica.</li><li>Identificacion de debilidades.</li><li>Analisis de cifrado, claves e integridad.</li><li>Propuesta de controles criptograficos.</li><li>Registro claro, tecnico y trazable.</li><li>Recomendaciones coherentes con la informacion comprometida.</li></ul></div>
+            <div class="quote">"Una recomendacion criptografica solamente es valida cuando se encuentra sustentada en una evidencia tecnica verificable"</div>
+          </div>
+          <nav class="slide-nav"><label class="nav-btn" for="s17">&lt;</label><span class="slide-num">18 / 18</span></nav>
+        </section>
+      </article>
+    </section>
+
+    <footer>
+      <div class="jump" aria-label="Ir a diapositiva">
+        <label for="s1">1</label><label for="s2">2</label><label for="s3">3</label><label for="s4">4</label><label for="s5">5</label><label for="s6">6</label><label for="s7">7</label><label for="s8">8</label><label for="s9">9</label><label for="s10">10</label><label for="s11">11</label><label for="s12">12</label><label for="s13">13</label><label for="s14">14</label><label for="s15">15</label><label for="s16">16</label><label for="s17">17</label><label for="s18">18</label>
+      </div>
+      <p class="help">La informacion ya esta escrita en el HTML. Use los botones de la diapositiva, los numeros inferiores o las flechas del teclado.</p>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      var total = 18;
+      function current() {
+        for (var i = 1; i <= total; i += 1) {
+          if (document.getElementById('s' + i).checked) return i;
+        }
+        return 1;
+      }
+      function go(n) {
+        if (n < 1) n = 1;
+        if (n > total) n = total;
+        document.getElementById('s' + n).checked = true;
+      }
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') {
+          event.preventDefault();
+          go(current() + 1);
+        }
+        if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
+          event.preventDefault();
+          go(current() - 1);
+        }
+      });
+      document.getElementById('fullToggle').addEventListener('click', function () {
+        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        } else if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      });
+    }());
+  </script>
+</body>
+</html>
